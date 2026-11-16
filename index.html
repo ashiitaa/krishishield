@@ -1,364 +1,961 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>KrishiShield — Right Dose. Right Time. Zero Runoff.</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>KrishiShield | Smart Farming Intelligence</title>
+
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+:root {
+  --forest:#174c3a; --green:#397d50; --lime:#a2d765;
+  --teal:#287f83; --gold:#d9a83f; --coral:#d96d5f;
+  --ink:#183b2e; --muted:#62796b; --bg:#c9dfbd;
+  --card:#edf5e8; --shadow:0 12px 30px rgba(30,75,51,.11);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{
+  font-family:Inter,"Segoe UI",Arial,sans-serif;
+  background:radial-gradient(circle at 10% 5%,#e1efc9 0,transparent 30%),
+  linear-gradient(135deg,#c5dfb6,#d9e9ca 48%,#bfe0d4);
+  color:var(--ink);min-height:100vh
+}
+button,input,select{font:inherit}
+button{cursor:pointer}
+button:focus-visible,input:focus-visible,select:focus-visible{
+  outline:3px solid #83b957;outline-offset:2px
+}
+.app{max-width:1500px;margin:auto;padding:22px 30px 115px}
+.topbar{
+  display:flex;align-items:center;justify-content:space-between;gap:15px;
+  padding:15px 21px;border-radius:22px;background:var(--forest);
+  color:white;box-shadow:var(--shadow)
+}
+.brand{display:flex;align-items:center;gap:12px}
+.brand-icon{
+  width:44px;height:44px;display:grid;place-items:center;
+  border-radius:14px;background:var(--lime);color:var(--forest);font-size:24px
+}
+.brand h1{font-size:21px;letter-spacing:-.5px}
+.brand small{display:block;color:#d0e7ce;font-size:10px;margin-top:4px;letter-spacing:1px}
+.top-actions{display:flex;align-items:center;gap:10px}
+.top-actions select,.top-actions button{
+  border:1px solid #ffffff45;background:#ffffff18;color:white;
+  padding:10px 13px;border-radius:11px
+}
+.top-actions select option{color:#183b2e}
+.profile-circle{
+  width:40px;height:40px;display:grid;place-items:center;
+  border-radius:50%;background:#e8c96e;color:var(--forest);
+  font-weight:800;border:0
+}
+.page{display:none;animation:appear .28s ease}
+.page.active{display:block}
+@keyframes appear{from{opacity:0;transform:translateY(7px)}to{opacity:1;transform:translateY(0)}}
+.welcome{
+  margin:25px 0 22px;padding:28px 30px;border-radius:25px;
+  background:linear-gradient(110deg,#174c3a,#287f67 65%,#4b965a);
+  color:white;display:flex;justify-content:space-between;align-items:center;
+  gap:20px;overflow:hidden;position:relative;box-shadow:var(--shadow)
+}
+.welcome:after{content:"🌿";position:absolute;right:23%;top:-35px;font-size:155px;opacity:.12}
+.welcome h2{font-size:clamp(24px,3vw,35px);margin-bottom:9px}
+.welcome p{color:#e0efdc;line-height:1.6;max-width:650px;font-size:14px}
+.welcome-tag{
+  position:relative;z-index:1;background:#ffffff1c;border:1px solid #ffffff55;
+  padding:13px 17px;border-radius:15px;white-space:nowrap;font-size:12px
+}
+.section-heading{
+  display:flex;align-items:end;justify-content:space-between;
+  gap:12px;margin:28px 0 15px
+}
+.section-heading h2{font-size:20px;color:var(--forest)}
+.section-heading p{color:var(--muted);font-size:12px;margin-top:5px}
+.panel{
+  background:rgba(242,248,235,.96);border:1px solid white;
+  border-radius:22px;padding:20px;box-shadow:var(--shadow);min-width:0
+}
+.panel-head{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:15px}
+.panel-head h3{font-size:16px;color:var(--forest)}
+.panel-head p{color:var(--muted);font-size:11px;margin-top:4px}
+.pill{
+  display:inline-flex;align-items:center;gap:6px;padding:7px 11px;
+  border-radius:30px;font-size:11px;font-weight:700;
+  background:#dff0d5;color:var(--green);white-space:nowrap
+}
+.dashboard-grid{display:grid;grid-template-columns:1.25fr .85fr;gap:17px;align-items:stretch}
+#map,#featureMap{width:100%;height:390px;border-radius:16px;z-index:1;background:#172a2b}
+.map-caption{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:12px;font-size:11px;color:var(--muted)}
+.map-button{border:0;border-radius:10px;padding:9px 13px;background:var(--forest);color:white;font-size:11px}
+.field{margin-top:13px}
+.field label{display:block;font-size:12px;font-weight:700;margin-bottom:7px;color:var(--forest)}
+.field input,.field select{
+  width:100%;padding:12px;border-radius:11px;border:1px solid #c5d8c4;
+  background:#fffdf2;color:var(--ink)
+}
+.field input[type=file]{font-size:11px}
+.coordinate-box{margin-top:16px;padding:14px;background:#dcefe0;border-radius:13px}
+.coordinate-box strong{display:block;margin-top:7px;font-size:13px}
+.primary-btn{
+  background:var(--forest);color:white;border:0;padding:12px 17px;
+  border-radius:11px;font-weight:700;margin-top:14px;transition:.2s
+}
+.primary-btn:hover{background:#28664b;transform:translateY(-1px)}
+.secondary-btn{background:#d5ebc9;color:var(--forest);border:0;padding:10px 14px;border-radius:11px;font-weight:700}
+.muted{color:var(--muted);font-size:12px;line-height:1.6}
+.status-message{font-size:12px;margin-top:10px;color:var(--green);line-height:1.5}
+.verdict-panel{
+  color:white;background:linear-gradient(120deg,#319b69,#176144);
+  border-radius:22px;padding:25px;box-shadow:var(--shadow)
+}
+.verdict-panel.hold{background:linear-gradient(120deg,#e28a60,#bd514c)}
+.verdict-panel.pending{background:linear-gradient(120deg,#428c8a,#286c6b)}
+.verdict-label{font-size:11px;text-transform:uppercase;letter-spacing:1.4px;opacity:.85}
+.verdict-title{font-size:31px;margin:12px 0 8px;font-weight:800}
+.verdict-description{color:#f0f7ed;font-size:13px;line-height:1.65}
+.verdict-footer{margin-top:18px;padding-top:14px;border-top:1px solid #ffffff45;font-size:12px}
+.calendar{display:grid;grid-template-columns:repeat(7,1fr);gap:8px}
+.day{padding:14px 6px;text-align:center;border-radius:12px;background:#e3f0dd;font-size:11px;min-height:76px;overflow-wrap:anywhere}
+.day strong{display:block;font-size:12px;margin-bottom:10px;color:var(--forest)}
+.day span{color:var(--green);font-weight:700;font-size:10px}
+.kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:15px}
+.kpi{border-radius:20px;padding:19px;min-height:135px;position:relative;overflow:hidden;box-shadow:var(--shadow);border:1px solid white}
+.kpi:after{content:"";width:85px;height:85px;border-radius:50%;position:absolute;right:-22px;bottom:-32px;background:#ffffff66}
+.kpi.green{background:#e3f5d6}.kpi.teal{background:#d7f1eb}
+.kpi.gold{background:#fff0c7}.kpi.coral{background:#ffe2d9}
+.kpi-top{display:flex;justify-content:space-between;align-items:center}
+.kpi-icon{font-size:23px}.kpi-label{font-size:11px;font-weight:800;color:#587264}
+.kpi-value{font-size:26px;font-weight:800;color:var(--forest);margin-top:14px;overflow-wrap:anywhere}
+.kpi-note{font-size:11px;color:#62796b;margin-top:5px}
+.three-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:15px}
+.mini-stat{background:#e5f1dd;padding:19px;border-radius:17px;min-width:0}
+.mini-stat strong{display:block;color:var(--forest);font-size:23px;margin:9px 0 4px;overflow-wrap:anywhere}
+.mini-stat span{font-size:11px;color:var(--muted)}
+.dose-card{background:linear-gradient(125deg,#fff0c7,#fff1dc);border-radius:21px;padding:22px;border:1px solid #fff9e8;box-shadow:var(--shadow)}
+.dose-card h3{color:#72551a;margin-bottom:9px}
+.dose-values{display:flex;gap:12px;margin-top:17px}
+.dose-value{flex:1;background:#fffaf0;padding:15px;border-radius:13px}
+.dose-value strong{display:block;font-size:24px;color:#75591e}
+.dose-value span{font-size:11px;color:#87764e}
+.chart-wrap{height:225px;position:relative}
+.chart-note{color:var(--muted);font-size:11px;margin-top:10px}
+.feature-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:17px}
+.feature-card{
+  border:1px solid white;text-align:left;padding:23px;border-radius:21px;
+  min-height:185px;box-shadow:var(--shadow);color:var(--forest);
+  position:relative;overflow:hidden;transition:.2s
+}
+.feature-card:hover{transform:translateY(-5px)}
+.feature-card:nth-child(1){background:#e3f5d6}
+.feature-card:nth-child(2){background:#fff0c7}
+.feature-card:nth-child(3){background:#d7f1eb}
+.feature-card:nth-child(4){background:#ffe2d9}
+.feature-card:nth-child(5){background:#e2e9ff}
+.feature-card:nth-child(6){background:#edf0ce}
+.feature-icon{font-size:31px;display:block;margin-bottom:17px}
+.feature-card h3{font-size:16px;margin-bottom:7px}
+.feature-card p{color:#617568;font-size:12px;line-height:1.55}
+.feature-arrow{position:absolute;right:18px;bottom:16px;font-size:21px}
+.workspace-panel{background:#eaf4e4;border:1px solid white;border-radius:22px;padding:24px;box-shadow:var(--shadow)}
+.back-btn{border:0;background:#d8edcf;color:var(--forest);padding:10px 14px;border-radius:10px;margin-bottom:17px;font-weight:700}
+.workspace-panel h2{color:var(--forest);margin-bottom:10px}
+.workspace-panel p{color:var(--muted);line-height:1.6;font-size:13px}
+.profile-card{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.profile-panel{padding:22px;background:#eaf4e4;border-radius:20px;border:1px solid white}
+.profile-panel h3{margin-bottom:15px;color:var(--forest)}
+.mode-buttons{display:flex;gap:10px;margin-top:12px;flex-wrap:wrap}
+.mode-buttons button{border:0;border-radius:10px;padding:10px 14px;background:#d0e7c9;color:var(--forest);font-weight:700}
+.mode-buttons button.selected{background:var(--forest);color:white}
+.bottom-nav{
+  position:fixed;bottom:17px;left:50%;transform:translateX(-50%);
+  z-index:999;display:flex;gap:5px;padding:8px;background:#174c3a;
+  border:1px solid #ffffff50;border-radius:20px;box-shadow:0 12px 35px #173f2c55;
+  max-width:calc(100vw - 20px)
+}
+.nav-btn{
+  border:0;color:#e4f5dc;background:transparent;padding:10px 14px;
+  border-radius:13px;font-size:12px;font-weight:700;
+  display:flex;align-items:center;gap:7px
+}
+.nav-btn.active{background:#b2e879;color:#174c3a}
+.nav-icon{font-size:18px}
+.footer{text-align:center;color:#597261;font-size:11px;padding:30px 0 0}
+.alert-overlay{
+  position:fixed;inset:0;background:rgba(18,48,34,.62);backdrop-filter:blur(5px);
+  z-index:3000;display:flex;align-items:center;justify-content:center;padding:18px
+}
+.alert-overlay.hidden{display:none}
+.alert-box{
+  position:relative;width:min(430px,100%);padding:30px 25px;text-align:center;
+  background:#f2f9e9;border:3px solid #a2d765;border-radius:25px;
+  box-shadow:0 20px 65px #102f2455;animation:popIn .25s ease
+}
+.alert-box.hold{background:#fff0e7;border-color:#e68b6d}
+.alert-box.safe{background:#eff9e7;border-color:#91c95e}
+@keyframes popIn{from{opacity:0;transform:scale(.92)}to{opacity:1;transform:scale(1)}}
+.alert-close{position:absolute;right:15px;top:10px;border:0;background:transparent;font-size:27px;color:#55705d}
+.alert-icon{font-size:47px;margin-bottom:12px}
+.alert-box h2{color:var(--forest);margin-bottom:10px}
+.alert-box p{color:#536c5b;font-size:14px;line-height:1.65}
+.hidden{display:none!important}
+
+/* SETTINGS AND PROFILE */
+.settings-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:16px}
+.settings-card{
+  background:#edf5e8;border:1px solid white;border-radius:19px;
+  padding:21px;box-shadow:var(--shadow);min-width:0
+}
+.settings-card h3{color:var(--forest);font-size:16px;margin-bottom:8px}
+.settings-card p{color:var(--muted);font-size:12px;line-height:1.6}
+.settings-row{
+  display:flex;align-items:center;justify-content:space-between;gap:15px;
+  padding:13px 0;border-bottom:1px solid #d7e5d2
+}
+.settings-row:last-child{border-bottom:0}
+.settings-row strong{display:block;color:var(--forest);font-size:13px}
+.settings-row small{display:block;color:var(--muted);font-size:11px;margin-top:4px}
+.settings-row select,.settings-row input[type=text]{
+  max-width:155px;padding:9px;border:1px solid #c5d8c4;
+  border-radius:9px;background:#fffdf2;color:var(--ink)
+}
+.switch{width:44px;height:24px;position:relative;flex-shrink:0}
+.switch input{opacity:0;width:0;height:0}
+.switch span{
+  position:absolute;inset:0;background:#b9c9b7;border-radius:30px;
+  transition:.2s;cursor:pointer
+}
+.switch span:before{
+  content:"";position:absolute;width:18px;height:18px;left:3px;top:3px;
+  border-radius:50%;background:white;transition:.2s
+}
+.switch input:checked+span{background:#438b57}
+.switch input:checked+span:before{transform:translateX(20px)}
+.profile-hero{
+  display:flex;align-items:center;gap:17px;padding:23px;
+  background:linear-gradient(115deg,#e3f5d6,#d7f1eb);
+  border-radius:20px;border:1px solid white;margin-bottom:18px
+}
+.profile-avatar{
+  width:70px;height:70px;border-radius:50%;display:grid;place-items:center;
+  background:#174c3a;color:#d9f4b8;font-size:25px;font-weight:800;flex-shrink:0
+}
+.profile-hero h2{color:var(--forest);font-size:22px}
+.profile-hero p{color:var(--muted);font-size:12px;margin-top:5px}
+.form-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}
+.danger-btn{
+  border:0;background:#ffe2d9;color:#a43f35;padding:11px 15px;
+  border-radius:10px;font-weight:700
+}
+.info-chip{display:inline-block;background:#dcefe0;padding:8px 11px;border-radius:9px;color:var(--forest);font-size:12px;font-weight:700}
+.notice-box{padding:13px;background:#fff0c7;border-radius:12px;color:#72551a;font-size:12px;line-height:1.6;margin-top:13px}
+.map-legend{display:flex;gap:14px;flex-wrap:wrap;margin-top:10px;color:#d6e7dc;font-size:11px}
+.map-legend span{display:flex;align-items:center;gap:6px}
+.legend-dot{width:9px;height:9px;border-radius:50%;background:#a2f36a;display:inline-block;box-shadow:0 0 9px #a2f36a}
+.leaflet-popup-content-wrapper,.leaflet-popup-tip{background:#173c32;color:#f2ffe9}
+.leaflet-popup-content{font-weight:600}
+.leaflet-control-zoom a{background:#173c32!important;color:#d8f3c5!important;border-color:#42695b!important}
+@media(max-width:950px){
+  .kpi-grid{grid-template-columns:repeat(2,1fr)}
+  .dashboard-grid{grid-template-columns:1fr 1fr}
+  .feature-grid{grid-template-columns:repeat(2,1fr)}
+}
+@media(max-width:680px){
+  .app{padding:12px 12px 105px}
+  .topbar{padding:12px}
+  .brand h1{font-size:17px}.brand small{display:none}
+  .top-actions{gap:5px}.top-actions select{max-width:90px;padding:8px 5px;font-size:11px}
+  .welcome{padding:22px;align-items:flex-start;flex-direction:column}
+  .welcome-tag{white-space:normal}
+  .dashboard-grid{grid-template-columns:1fr}
+  .kpi-grid{gap:9px}.kpi{padding:14px;min-height:120px}.kpi-value{font-size:22px}
+  .feature-grid{grid-template-columns:1fr 1fr;gap:10px}
+  .feature-card{padding:15px;min-height:175px}
+  .feature-card h3{font-size:13px}.feature-card p{font-size:11px}
+  .calendar{grid-template-columns:repeat(4,1fr)}
+  .three-grid,.profile-card,.settings-grid{grid-template-columns:1fr}
+  .nav-btn{padding:9px 9px;flex-direction:column;gap:3px;font-size:9px}
+  .nav-icon{font-size:17px}
+  #map,#featureMap{height:300px}
+  .map-caption{flex-direction:column;align-items:flex-start}
+  .dose-values{flex-direction:column}
+  .section-heading{align-items:flex-start}
+  .settings-row select,.settings-row input[type=text]{max-width:125px}
+  .profile-hero{align-items:flex-start}
+  /* Darkened detailed map */
+}
+</style>
 </head>
-<body class="bg-slate-50 text-slate-800 font-sans">
 
-  <!-- 1. TOP HEADER BAR -->
-  <header class="bg-emerald-900 text-white shadow-md sticky top-0 z-50">
-    <div class="max-w-6xl mx-auto px-4 py-3 flex flex-wrap items-center justify-between gap-3">
-      <div>
-        <h1 class="text-xl font-bold tracking-tight flex items-center gap-2">
-          🌱 KrishiShield
-        </h1>
-        <p class="text-xs text-emerald-200">Right Dose. Right Time. Zero Runoff.</p>
-      </div>
+<body>
+<div class="app">
 
-      <div class="flex items-center gap-3">
-        <!-- Language Toggle -->
-        <select id="langSelect" onchange="toggleLanguage()" class="bg-emerald-800 text-white text-sm rounded-lg px-3 py-1.5 border border-emerald-600 focus:outline-none">
-          <option value="en">English</option>
-          <option value="hi">हिंदी (Hindi)</option>
-        </select>
+<header class="topbar">
+  <div class="brand">
+    <div class="brand-icon">🌱</div>
+    <div><h1>KrishiShield</h1><small>RIGHT DOSE. RIGHT TIME. ZERO RUNOFF.</small></div>
+  </div>
+  <div class="top-actions">
+    <select id="langSelect" onchange="toggleLanguage()">
+      <option value="en">English</option><option value="hi">हिन्दी</option>
+    </select>
+    <button onclick="showPage('settings')">⚙ Settings</button>
+    <button class="profile-circle" id="topAvatar" onclick="showPage('profile')" title="Open profile">F</button>
+  </div>
+</header>
 
-        <!-- Option 1 Mode Switch -->
-        <div class="bg-emerald-950 p-1 rounded-lg flex text-xs font-semibold">
-          <button id="btnFarmerMode" onclick="setMode('farmer')" class="px-3 py-1.5 rounded-md bg-emerald-500 text-white transition">
-            📱 Farmer View
-          </button>
-          <button id="btnCoopMode" onclick="setMode('coop')" class="px-3 py-1.5 rounded-md text-emerald-200 hover:text-white transition">
-            ☎️ Co-op / Keypad Mode
-          </button>
-        </div>
-      </div>
+<!-- HOME -->
+<main id="homePage" class="page active">
+  <section class="welcome">
+    <div><h2>Grow smarter. Farm better. 🌾</h2>
+    <p>Your agricultural intelligence centre. Understand your farm, protect your soil and make better fertilizer decisions.</p></div>
+    <div class="welcome-tag">🌱 KrishiShield Farm Dashboard</div>
+  </section>
+
+  <div class="section-heading"><div><h2>Farm Intelligence</h2><p>Your farm location and field information in one place.</p></div><span class="pill">● Interactive Farm View</span></div>
+
+  <section class="dashboard-grid">
+    <div class="panel">
+      <div class="panel-head"><div><h3>🗺️ Your Farm Location</h3><p>Select a point on the map to analyse your field.</p></div><span class="pill">Farm Location Map</span></div>
+      <div id="map"></div>
+      <div class="map-legend"><span><i class="legend-dot"></i> Selected farm</span><span>Click map to move marker</span></div>
+      <div class="map-caption"><span id="coordDisplay">23.18150, 79.98640</span><button class="map-button" onclick="loadSampleFarm()">Use sample farm</button></div>
     </div>
-  </header>
+    <div class="panel">
+      <div class="panel-head"><div><h3>🌾 Farm Details</h3><p>Enter your field information.</p></div></div>
+      <div class="field"><label for="cropSelect">Select Crop</label><select id="cropSelect"><option value="wheat">Wheat</option><option value="rice">Rice</option><option value="soybean">Soybean</option><option value="maize">Maize</option></select></div>
+      <div class="field"><label for="areaInput">Field Area (hectares)</label><input type="number" id="areaInput" value="1" min="0.01" step="0.01"></div>
+      <div class="coordinate-box"><p class="muted">📍 Selected farm coordinates</p><strong id="farmCoordinates">23.18150, 79.98640</strong><p class="muted" id="soilDisplay" style="margin-top:9px">Soil information will appear after analysis.</p></div>
+      <div class="field"><label for="soilCardFile">Soil Health Card (optional)</label><input type="file" id="soilCardFile" accept=".pdf,.png,.jpg,.jpeg"></div>
+      <button class="secondary-btn" onclick="uploadSoilCard()">Upload Soil Card</button>
+      <p id="ocrStatus" class="status-message">No card uploaded yet.</p>
+      <button class="primary-btn" style="width:100%" onclick="analyzeFarm()">Analyse My Farm →</button>
+      <p class="status-message" id="analysisStatus">Awaiting analysis...</p>
+    </div>
+  </section>
 
-  <main class="max-w-6xl mx-auto px-4 py-6 space-y-6">
+  <div class="section-heading"><div><h2>Farm Recommendation</h2><p>Your fertilizer application decision based on field conditions.</p></div></div>
+  <section class="verdict-panel pending" id="verdictBanner">
+    <div class="verdict-label">CURRENT FIELD STATUS</div><div class="verdict-title" id="verdictHeadline">Awaiting Analysis</div>
+    <p class="verdict-description" id="verdictSubtext">Select your farm details and run an analysis to receive your recommendation.</p>
+    <div class="verdict-footer">⏱ Safe application window: <strong id="safeWindow">--</strong></div>
+  </section>
 
-    <!-- 2. HERO INPUT ZONE (MAP + SOIL CARD SCANNER) -->
-    <section class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-      <!-- Left: Interactive Map -->
-      <div class="lg:col-span-2 bg-white p-4 rounded-2xl shadow-sm border border-slate-200">
-        <div class="flex flex-wrap justify-between items-center mb-3 gap-2">
-          <div>
-            <h2 class="font-bold text-slate-800" data-i18n="step1Title">1. Pin Your Farm Location</h2>
-            <p class="text-xs text-slate-500">Click anywhere on the map to fetch live soil moisture & rain forecast</p>
-          </div>
-          <button onclick="loadSampleFarm()" class="text-xs bg-emerald-100 text-emerald-800 hover:bg-emerald-200 font-semibold px-3 py-1.5 rounded-lg transition">
-            📍 Sample Farm (Jabalpur, MP)
-          </button>
-        </div>
-        <div id="map" class="h-64 w-full rounded-xl z-10 border border-slate-200"></div>
-        <div class="mt-3 flex flex-wrap gap-4 text-xs text-slate-600 bg-slate-100 p-2.5 rounded-lg">
-          <span><strong>Coordinates:</strong> <span id="coordDisplay">23.1815, 79.9864</span></span>
-          <span><strong>Detected Soil:</strong> <span id="soilDisplay" class="text-emerald-700 font-semibold">Loading...</span></span>
-        </div>
-      </div>
+  <div class="section-heading"><div><h2>7-Day Field Calendar</h2><p>Plan your fertilizer application according to your analysis.</p></div></div>
+  <section class="panel"><div class="calendar" id="calendarGrid">
+    <div class="day"><strong>Day 1</strong><span>--</span></div><div class="day"><strong>Day 2</strong><span>--</span></div>
+    <div class="day"><strong>Day 3</strong><span>--</span></div><div class="day"><strong>Day 4</strong><span>--</span></div>
+    <div class="day"><strong>Day 5</strong><span>--</span></div><div class="day"><strong>Day 6</strong><span>--</span></div>
+    <div class="day"><strong>Day 7</strong><span>--</span></div>
+  </div></section>
 
-      <!-- Right: Crop & Soil Health Card Input -->
-      <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200 flex flex-col justify-between space-y-4">
-        <div class="space-y-3">
-          <h2 class="font-bold text-slate-800" data-i18n="step2Title">2. Crop & Soil Health Card</h2>
-          
-          <div>
-            <label class="block text-xs font-semibold text-slate-600 mb-1">Select Crop</label>
-            <select id="cropSelect" onchange="analyzeFarm()" class="w-full border border-slate-300 rounded-lg p-2 text-sm">
-              <option value="wheat">Wheat (गेहूँ)</option>
-              <option value="rice">Rice / Paddy (धान)</option>
-              <option value="soybean">Soybean (सोयाबीन)</option>
-              <option value="maize">Maize (मक्का)</option>
-            </select>
-          </div>
+  <div class="section-heading"><div><h2>Farm at a Glance</h2><p>Your important farm indicators at one glance.</p></div></div>
+  <section class="kpi-grid">
+    <div class="kpi green"><div class="kpi-top"><span class="kpi-label">RUNOFF STATUS</span><span class="kpi-icon">💧</span></div><div class="kpi-value" id="metricRunoff">--</div><div class="kpi-note">Latest recommendation</div></div>
+    <div class="kpi teal"><div class="kpi-top"><span class="kpi-label">NITROGEN SAVED</span><span class="kpi-icon">🌿</span></div><div class="kpi-value" id="metricNitrogen">--</div><div class="kpi-note">Estimated nitrogen savings</div></div>
+    <div class="kpi gold"><div class="kpi-top"><span class="kpi-label">MONEY SAVED</span><span class="kpi-icon">₹</span></div><div class="kpi-value" id="metricRupees">--</div><div class="kpi-note">Estimated fertilizer savings</div></div>
+    <div class="kpi coral"><div class="kpi-top"><span class="kpi-label">WASH-OFF RISK</span><span class="kpi-icon">🌧️</span></div><div class="kpi-value" id="metricRisk">--</div><div class="kpi-note">Estimated fertilizer wash-off risk</div></div>
+  </section>
 
-          <div>
-            <label class="block text-xs font-semibold text-slate-600 mb-1">Field Size (Hectares)</label>
-            <input type="number" id="areaInput" value="1.0" step="0.5" min="0.5" onchange="analyzeFarm()" class="w-full border border-slate-300 rounded-lg p-2 text-sm" />
-          </div>
+  <div class="section-heading"><div><h2>Environmental Impact</h2><p>Hydrology and soil indicators from your farm analysis.</p></div></div>
+  <section class="three-grid">
+    <div class="mini-stat"><span>SOIL SATURATION</span><strong id="metricSaturation">--</strong><span>Estimated saturation</span></div>
+    <div class="mini-stat"><span>CURVE NUMBER</span><strong id="metricCN">--</strong><span>SCS hydrology indicator</span></div>
+    <div class="mini-stat"><span>FIELD AREA</span><strong id="overviewArea">--</strong><span>Selected farm area</span></div>
+  </section>
 
-          <div class="pt-1">
-            <label class="block text-xs font-semibold text-slate-600 mb-1">Upload Soil Health Card (Optional)</label>
-            <input type="file" id="soilCardFile" accept="image/*" onchange="uploadSoilCard()" class="block w-full text-xs text-slate-500 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100" />
-            <p id="ocrStatus" class="text-xs text-emerald-600 mt-1 hidden">✅ Soil Card N & P nutrients extracted!</p>
-          </div>
-        </div>
+  <div class="section-heading"><div><h2>Fertilizer Recommendation</h2><p>Recommended quantities for your selected crop and field area.</p></div></div>
+  <section class="dose-card"><h3>🌾 Smart Fertilizer Plan</h3><p class="muted" id="doseHeadline">Awaiting farm analysis.</p><p class="muted" id="doseSavingsNote"></p>
+    <div class="dose-values"><div class="dose-value"><strong id="ureaValue">--</strong><span>Urea (kg)</span></div><div class="dose-value"><strong id="dapValue">--</strong><span>DAP (kg)</span></div></div>
+  </section>
 
-        <button onclick="analyzeFarm()" class="w-full bg-emerald-700 hover:bg-emerald-800 text-white font-bold py-2.5 rounded-xl text-sm shadow transition">
-          🔄 Recalculate Runoff & Dose
-        </button>
-      </div>
-    </section>
+  <div class="section-heading"><div><h2>Rainfall & Field Risk</h2><p>Rainfall information returned by your farm analysis.</p></div></div>
+  <section class="panel"><div class="chart-wrap"><canvas id="rainChart"></canvas></div><p class="chart-note" id="chartNote">Waiting for analysis data.</p></section>
+</main>
 
-    <!-- 3. MAIN ANSWER BANNER (BIG GREEN / RED VERDICT) -->
-    <section id="verdictBanner" class="rounded-2xl p-6 text-white shadow-md bg-rose-600 transition-colors duration-300">
-      <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div class="space-y-1">
-          <span id="verdictBadge" class="inline-block bg-black/25 text-xs font-bold uppercase tracking-wider px-3 py-1 rounded-full">
-            Analyzing Live Weather & Soil...
-          </span>
-          <h2 id="verdictHeadline" class="text-2xl md:text-3xl font-extrabold">
-            Checking Runoff Risk...
-          </h2>
-          <p id="verdictSubtext" class="text-sm md:text-base text-white/90">
-            Fetching hourly rainfall & soil moisture saturation...
-          </p>
-        </div>
+<!-- FEATURES -->
+<main id="featuresPage" class="page">
+  <section class="welcome"><div><h2>Explore KrishiShield Features</h2><p>Choose the tools you need. Each feature opens in its own workspace.</p></div><div class="welcome-tag">🌱 Smart tools for smarter farming</div></section>
+  <div class="section-heading"><div><h2>Explore Your Tools</h2><p>Select a feature to open its workspace.</p></div></div>
+  <div class="feature-grid">
+    <button class="feature-card" onclick="openFeature('soil')"><span class="feature-icon">🧪</span><h3>Soil Health Analysis</h3><p>Upload your Soil Health Card and extract nutrient information.</p><span class="feature-arrow">↗</span></button>
+    <button class="feature-card" onclick="openFeature('fertilizer')"><span class="feature-icon">🌾</span><h3>Fertilizer Optimizer</h3><p>View recommended Urea and DAP quantities for your field.</p><span class="feature-arrow">↗</span></button>
+    <button class="feature-card" onclick="openFeature('water')"><span class="feature-icon">💧</span><h3>Water & Runoff Analysis</h3><p>Understand runoff risk and your SAFE or HOLD recommendation.</p><span class="feature-arrow">↗</span></button>
+    <button class="feature-card" onclick="openFeature('planning')"><span class="feature-icon">📅</span><h3>Smart Application Planning</h3><p>Review your seven-day field calendar.</p><span class="feature-arrow">↗</span></button>
+    <button class="feature-card" onclick="openFeature('assistance')"><span class="feature-icon">📱</span><h3>Farmer Assistance</h3><p>Send a keypad-phone alert with your field recommendation.</p><span class="feature-arrow">↗</span></button>
+    <button class="feature-card" onclick="openFeature('mapfeature')"><span class="feature-icon">🗺️</span><h3>Farm Location Mapping</h3><p>Open a dedicated large map to select your farm location.</p><span class="feature-arrow">↗</span></button>
+  </div>
+  <div id="featureDetail" class="hidden" style="margin-top:22px"><button class="back-btn" onclick="closeFeature()">← Back to Features</button><div class="workspace-panel" id="featureContent"></div></div>
+</main>
 
-        <div class="bg-white/15 backdrop-blur-sm p-4 rounded-xl border border-white/25 min-w-[260px]">
-          <p class="text-xs uppercase tracking-wider text-white/80 font-semibold">Recommended Fertilizer Dose</p>
-          <p id="doseHeadline" class="text-lg font-bold mt-1">65 kg Urea + 30 kg DAP</p>
-          <p id="doseSavingsNote" class="text-xs text-white/90 mt-1">Adjusted from Soil Health Card</p>
-        </div>
-      </div>
-    </section>
+<!-- FEATURE WORKSPACE -->
+<main id="featureWorkspacePage" class="page">
+  <button class="back-btn" onclick="showPage('features')">← Back to Features</button>
+  <div class="workspace-panel" id="workspaceContent"></div>
+</main>
 
-    <!-- 4. DYNAMIC ACTION SECTION (CHANGES BASED ON TOP SWITCH) -->
-    
-    <!-- VIEW A: FARMER VIEW (SMARTPHONE 7-DAY CALENDAR) -->
-    <section id="farmerViewPanel" class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 space-y-4">
-      <div class="flex flex-wrap justify-between items-center gap-2">
-        <div>
-          <h3 class="font-bold text-slate-800">📅 7-Day "Safe-to-Spray" Window</h3>
-          <p class="text-xs text-slate-500">Green days have low surface runoff risk so fertilizer absorbs into crop roots</p>
-        </div>
-        <button onclick="logSavings()" id="logBtn" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold px-4 py-2 rounded-lg shadow-sm transition">
-          ✅ I Delayed Spraying (Log Savings)
-        </button>
-      </div>
+<!-- ANALYTICS -->
+<main id="analyticsPage" class="page">
+  <section class="welcome"><div><h2>Farm Analytics</h2><p>Understand your farm performance through analysis indicators and visual summaries.</p></div><div class="welcome-tag">📈 Analysis Insights</div></section>
+  <div class="section-heading"><div><h2>Impact Indicators</h2><p>Latest values received from your farm analysis.</p></div></div>
+  <section class="kpi-grid">
+    <div class="kpi green"><div class="kpi-label">NITROGEN SAVED</div><div class="kpi-value" id="analyticsNitrogen">--</div><div class="kpi-note">Estimated savings</div></div>
+    <div class="kpi gold"><div class="kpi-label">MONEY SAVED</div><div class="kpi-value" id="analyticsRupees">--</div><div class="kpi-note">Estimated savings</div></div>
+    <div class="kpi teal"><div class="kpi-label">SATURATION</div><div class="kpi-value" id="analyticsSaturation">--</div><div class="kpi-note">Soil saturation</div></div>
+    <div class="kpi coral"><div class="kpi-label">WASH-OFF RISK</div><div class="kpi-value" id="analyticsRisk">--</div><div class="kpi-note">Estimated risk</div></div>
+  </section>
+  <div class="section-heading"><div><h2>Rainfall Planning</h2><p>Calendar information returned by the backend.</p></div></div>
+  <section class="panel"><div class="chart-wrap"><canvas id="analyticsChart"></canvas></div><p class="chart-note">Chart values are taken from the available analysis data.</p></section>
+  <div class="section-heading"><div><h2>Hydrology Information</h2><p>Understand the science behind your field analysis.</p></div></div>
+  <section class="panel"><h3 style="color:var(--forest);margin-bottom:10px">SCS Curve Number Method</h3><p class="muted">The Soil Conservation Service Curve Number method estimates direct runoff from rainfall using factors such as soil characteristics, land use and moisture conditions. KrishiShield uses its hydrology analysis to help assess fertilizer application risk.</p>
+    <div class="three-grid" style="margin-top:17px"><div class="mini-stat"><span>CURVE NUMBER</span><strong id="analyticsCN">--</strong><span>Latest analysis</span></div><div class="mini-stat"><span>SOIL TYPE</span><strong id="analyticsSoil">--</strong><span>Returned soil category</span></div><div class="mini-stat"><span>NEXT 36H RAIN</span><strong id="analyticsRain">--</strong><span>Backend rainfall estimate</span></div></div>
+  </section>
+</main>
 
-      <div id="calendarGrid" class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-7 gap-3">
-        <!-- Populated dynamically by JS -->
-      </div>
-    </section>
+<!-- PROFILE -->
+<main id="profilePage" class="page">
+  <section class="welcome"><div><h2>Manage Your Profile</h2><p>View and update your personal information and farming details.</p></div><div class="welcome-tag">👩‍🌾 Farmer Profile</div></section>
+  <section class="profile-hero">
+    <div class="profile-avatar" id="profileAvatar">F</div>
+    <div><h2 id="profileDisplayName">Farmer</h2><p id="profileDisplayPhone">Add your phone number to complete your profile.</p><p style="margin-top:9px"><span class="info-chip" id="profileFarmerId">Farmer ID: Local profile</span></p></div>
+  </section>
+  <section class="profile-card">
+    <div class="profile-panel">
+      <h3>👤 Personal Information</h3>
+      <div class="field"><label for="farmerName">Full Name</label><input id="farmerName" type="text" placeholder="Enter your full name"></div>
+      <div class="field"><label for="farmerPhone">Phone Number</label><input id="farmerPhone" type="tel" placeholder="Enter phone number"></div>
+      <div class="field"><label for="farmerVillage">Village / Town</label><input id="farmerVillage" type="text" placeholder="Enter village or town"></div>
+      <div class="field"><label for="farmerDistrict">District</label><input id="farmerDistrict" type="text" placeholder="Enter district"></div>
+      <div class="form-actions"><button class="primary-btn" onclick="saveProfile()">Save Profile</button><button class="secondary-btn" onclick="loadProfileForm()">Cancel</button></div>
+      <p id="profileStatus" class="status-message">Your profile details are stored in this browser on this device.</p>
+    </div>
+    <div class="profile-panel">
+      <h3>🌾 Farming Preferences</h3>
+      <div class="field"><label for="profileLanguage">Language</label><select id="profileLanguage" onchange="changeLanguageFromProfile()"><option value="en">English</option><option value="hi">Hindi</option></select></div>
+      <div class="field"><label for="profileDefaultCrop">Preferred Crop</label><select id="profileDefaultCrop"><option value="wheat">Wheat</option><option value="rice">Rice</option><option value="soybean">Soybean</option><option value="maize">Maize</option></select></div>
+      <div class="field"><label for="profileDefaultArea">Usual Field Area (hectares)</label><input id="profileDefaultArea" type="number" min="0.01" step="0.01" value="1"></div>
+      <div style="margin-top:17px"><label class="muted">Choose your working mode</label><div class="mode-buttons"><button id="btnFarmerMode" class="selected" onclick="setMode('farmer')">Farmer Mode</button><button id="btnCoopMode" onclick="setMode('coop')">Co-op Mode</button></div></div>
+      <button class="primary-btn" onclick="saveFarmPreferences()">Save Farming Preferences</button>
+      <p id="farmPreferenceStatus" class="status-message"></p>
+    </div>
+  </section>
+  <section class="panel" style="margin-top:18px"><h3 style="color:var(--forest);margin-bottom:8px">Farmer Assistance Alert</h3><p class="muted">Send your latest field recommendation through the keypad-phone alert service.</p><button class="primary-btn" onclick="sendKeypadAlert()">Send SMS Alert</button><div id="alertResultBox" class="status-message"></div></section>
+</main>
 
-    <!-- VIEW B: CO-OP / SHOPKEEPER MODE (KEYPAD PHONE VOICE & SMS ALERT) -->
-    <section id="coopViewPanel" class="hidden bg-amber-50 p-5 rounded-2xl shadow-sm border border-amber-200 space-y-4">
-      <div class="flex flex-wrap justify-between items-center gap-2">
-        <div>
-          <h3 class="font-bold text-amber-950">☎️ Keypad Phone Farmer Alert Dispatch</h3>
-          <p class="text-xs text-amber-800">Send automated local-language voice call & SMS to farmers without smartphones</p>
-        </div>
-        <span class="bg-amber-200 text-amber-950 text-xs font-bold px-3 py-1 rounded-full">
-          Toll-Free Missed Call Check: 1800-180-1551
-        </span>
-      </div>
+<!-- SETTINGS -->
+<main id="settingsPage" class="page">
+  <section class="welcome"><div><h2>Settings & Preferences</h2><p>Manage your account preferences, farm setup, notifications and privacy options.</p></div><div class="welcome-tag">⚙ Your KrishiShield Settings</div></section>
 
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div>
-          <label class="block text-xs font-semibold text-amber-900 mb-1">Farmer Name</label>
-          <input type="text" id="farmerNameInput" value="Ramesh Patel" class="w-full border border-amber-300 rounded-lg p-2 text-sm bg-white" />
-        </div>
-        <div>
-          <label class="block text-xs font-semibold text-amber-900 mb-1">Keypad Phone Number (+91...)</label>
-          <input type="text" id="farmerPhoneInput" placeholder="+919876543210" value="+919876543210" class="w-full border border-amber-300 rounded-lg p-2 text-sm bg-white" />
-        </div>
-        <div class="flex items-end">
-          <button onclick="sendKeypadAlert()" class="w-full bg-amber-600 hover:bg-amber-700 text-white font-bold py-2 px-4 rounded-lg text-sm shadow transition">
-            📞 Send Voice Call & SMS Now
-          </button>
-        </div>
-      </div>
+  <div class="section-heading"><div><h2>Account Settings</h2><p>Manage your personal account information.</p></div></div>
+  <section class="settings-grid">
+    <div class="settings-card">
+      <h3>👤 Account Information</h3><p>Your profile and account details.</p>
+      <div class="settings-row"><div><strong>Farmer name</strong><small id="settingsFarmerName">Not added</small></div><button class="secondary-btn" onclick="showPage('profile')">Edit</button></div>
+      <div class="settings-row"><div><strong>Farmer ID</strong><small id="settingsFarmerId">Local profile ID</small></div><span class="info-chip">Local</span></div>
+      <div class="settings-row"><div><strong>Phone number</strong><small id="settingsPhone">Not added</small></div><button class="secondary-btn" onclick="showPage('profile')">Edit</button></div>
+      <div class="settings-row"><div><strong>Manage profile</strong><small>Change your personal information</small></div><button class="secondary-btn" onclick="showPage('profile')">Open</button></div>
+    </div>
 
-      <div id="alertResultBox" class="hidden bg-white p-3 rounded-xl border border-amber-300 text-xs text-slate-700"></div>
-    </section>
+    <div class="settings-card">
+      <h3>🌐 Language & Display</h3><p>Choose how KrishiShield appears on your device.</p>
+      <div class="settings-row"><div><strong>App language</strong><small>Preferred display language</small></div><select id="settingsLanguage" onchange="setAppLanguage(this.value)"><option value="en">English</option><option value="hi">Hindi</option></select></div>
+      <div class="settings-row"><div><strong>Dashboard theme</strong><small>Current colour appearance</small></div><span class="info-chip">Farm Green</span></div>
+      <div class="settings-row"><div><strong>Map appearance</strong><small>Dark map with bright markers</small></div><span class="info-chip">Dark</span></div>
+    </div>
 
-    <!-- 5. MEASURABLE IMPACT & SAVINGS LEDGER -->
-    <section class="grid grid-cols-1 md:grid-cols-3 gap-4">
-      <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200">
-        <p class="text-xs font-semibold text-slate-500 uppercase">Fertilizer Kept Out of Rivers</p>
-        <p id="metricNitrogen" class="text-2xl font-extrabold text-emerald-700 mt-1">-- kg N</p>
-        <p class="text-xs text-slate-400 mt-1">Prevents groundwater & river eutrophication</p>
-      </div>
-      <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200">
-        <p class="text-xs font-semibold text-slate-500 uppercase">Estimated Farmer Savings</p>
-        <p id="metricRupees" class="text-2xl font-extrabold text-emerald-700 mt-1">₹ --</p>
-        <p class="text-xs text-slate-400 mt-1">Avoided rain wash-off + Soil Card dose cut</p>
-      </div>
-      <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200">
-        <p class="text-xs font-semibold text-slate-500 uppercase">Soil Runoff Risk (SCS-CN)</p>
-        <p id="metricSaturation" class="text-2xl font-extrabold text-slate-800 mt-1">--%</p>
-        <p id="metricCN" class="text-xs text-slate-400 mt-1">Curve Number: --</p>
-      </div>
-    </section>
+    <div class="settings-card">
+      <h3>🔔 Notifications</h3><p>Choose which reminders you want to enable in this browser.</p>
+      <div class="settings-row"><div><strong>Farm analysis reminders</strong><small>Reminder preference</small></div><label class="switch"><input type="checkbox" id="notifyAnalysis" onchange="saveSettings()"><span></span></label></div>
+      <div class="settings-row"><div><strong>High wash-off risk alerts</strong><small>Show risk warnings in dashboard</small></div><label class="switch"><input type="checkbox" id="notifyRisk" checked onchange="saveSettings()"><span></span></label></div>
+      <div class="settings-row"><div><strong>Application planning reminders</strong><small>Calendar reminder preference</small></div><label class="switch"><input type="checkbox" id="notifyCalendar" onchange="saveSettings()"><span></span></label></div>
+      <p id="settingsSaveStatus" class="status-message">Notification preferences are saved on this device.</p>
+    </div>
 
-    <!-- Expandable Judge Math Box -->
-    <details class="bg-white p-4 rounded-xl border border-slate-200 text-xs text-slate-600">
-      <summary class="font-bold cursor-pointer text-slate-700">📐 View Hydrology & Soil Math (SCS Curve Number Engine)</summary>
-      <p class="mt-2 leading-relaxed">
-        KrishiShield combines <strong>ISRIC SoilGrids</strong> clay/sand texture with <strong>Open-Meteo</strong> live top-soil moisture (0–1 cm) to determine Antecedent Moisture Condition (AMC I–III). Using the USDA-SCS Runoff Equation <code>Q = (P - 0.2S)² / (P + 0.8S)</code> where <code>S = (25400 / CN) - 254</code>, we trigger a <strong>HOLD</strong> alert whenever predicted storm runoff exceeds soil infiltration capacity.
-      </p>
-    </details>
+    <div class="settings-card">
+      <h3>🌾 Farm Configuration</h3><p>Set your default crop and field size.</p>
+      <div class="settings-row"><div><strong>Default crop</strong><small>Used when opening your farm dashboard</small></div><select id="settingsCrop"><option value="wheat">Wheat</option><option value="rice">Rice</option><option value="soybean">Soybean</option><option value="maize">Maize</option></select></div>
+      <div class="settings-row"><div><strong>Default field area (ha)</strong><small>Your usual field size</small></div><input id="settingsArea" type="text" value="1"></div>
+      <button class="primary-btn" onclick="saveSettingsFarm()">Save Farm Setup</button>
+    </div>
 
-  </main>
+    <div class="settings-card">
+      <h3>🔒 Privacy & Security</h3><p>Understand how this version stores your information.</p>
+      <div class="settings-row"><div><strong>Personal information</strong><small>Stored locally in this browser</small></div><span class="info-chip">Device</span></div>
+      <div class="settings-row"><div><strong>Account authentication</strong><small>Backend login is not connected yet</small></div><span class="info-chip">Pending</span></div>
+      <div class="settings-row"><div><strong>Clear local profile</strong><small>Remove saved profile from this browser</small></div><button class="danger-btn" onclick="clearLocalProfile()">Clear</button></div>
+    </div>
 
-  <script>
-    const API_BASE = "";
-    let currentLat = 23.1815;
-    let currentLon = 79.9864;
-    let extractedN = null;
-    let extractedP = null;
-    let latestData = null;
+    <div class="settings-card">
+      <h3>ℹ️ About KrishiShield</h3><p>Smart farming decisions for a healthier tomorrow.</p>
+      <div class="settings-row"><div><strong>Application</strong><small>KrishiShield</small></div><span class="info-chip">Farm Intelligence</span></div>
+      <div class="settings-row"><div><strong>Version</strong><small>Frontend dashboard</small></div><span class="info-chip">1.0</span></div>
+      <div class="settings-row"><div><strong>Support</strong><small>Contact your project administrator for assistance.</small></div></div>
+    </div>
+  </section>
 
-    // Initialize Leaflet Map
-    const map = L.map('map').setView([currentLat, currentLon], 13);
-    L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
-     attribution: '© Esri Satellite'
-     }).addTo(map);
-      
-    let marker = L.marker([currentLat, currentLon]).addTo(map);
+  <div class="section-heading"><div><h2>Session</h2><p>Account access options.</p></div></div>
+  <section class="panel">
+    <h3 style="color:var(--forest)">Sign out</h3>
+    <p class="muted" style="margin-top:7px">Login and logout authentication will become available after the backend account system is implemented.</p>
+    <button class="danger-btn" style="margin-top:14px" onclick="showAlert('🔐','Login Not Connected','Secure login and logout are not connected to the backend yet. Your locally saved profile will remain on this device.',true)">Log Out</button>
+  </section>
+</main>
 
-    map.on('click', function(e) {
-      currentLat = parseFloat(e.latlng.lat.toFixed(4));
-      currentLon = parseFloat(e.latlng.lng.toFixed(4));
-      marker.setLatLng([currentLat, currentLon]);
-      document.getElementById('coordDisplay').innerText = `${currentLat}, ${currentLon}`;
-      analyzeFarm();
+<div class="footer">KrishiShield · Smart farming decisions for a healthier tomorrow.</div>
+</div>
+
+<!-- BOTTOM NAV -->
+<nav class="bottom-nav">
+  <button class="nav-btn active" data-page="home" onclick="showPage('home')"><span class="nav-icon">⌂</span>Home</button>
+  <button class="nav-btn" data-page="features" onclick="showPage('features')"><span class="nav-icon">▦</span>Features</button>
+  <button class="nav-btn" data-page="analytics" onclick="showPage('analytics')"><span class="nav-icon">▥</span>Analytics</button>
+  <button class="nav-btn" data-page="profile" onclick="showPage('profile')"><span class="nav-icon">◉</span>Profile</button>
+  <button class="nav-btn" data-page="settings" onclick="showPage('settings')"><span class="nav-icon">⚙</span>Settings</button>
+</nav>
+
+<!-- ALERT POPUP -->
+<div id="alertPopup" class="alert-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="alertTitle">
+  <div class="alert-box" id="alertBox">
+    <button class="alert-close" onclick="closeAlert()" aria-label="Close alert">×</button>
+    <div id="alertIcon" class="alert-icon">🌱</div><h2 id="alertTitle">Farm Update</h2>
+    <p id="alertMessage">Your farm analysis has been updated.</p>
+    <button class="primary-btn" onclick="closeAlert()">Got it</button>
+  </div>
+</div>
+
+<script>
+/* CONFIGURATION AND STATE */
+const API_BASE="";
+let currentLat=23.1815,currentLon=79.9864;
+let extractedN=null,extractedP=null,latestData=null;
+let map=null,farmMarker=null,featureMap=null,featureMarker=null;
+let rainChart=null,analyticsChart=null,currentMode="farmer";
+let alertTimer=null;
+
+const $=id=>document.getElementById(id);
+const PROFILE_KEY="krishishield_profile_v1";
+const SETTINGS_KEY="krishishield_settings_v1";
+const PREF_KEY="krishishield_farm_preferences_v1";
+
+function updateText(id,value){const el=$(id);if(el)el.textContent=value}
+function formatValue(value,suffix=""){return value===null||value===undefined||value===""?"--":value+suffix}
+function escapeHTML(value){return String(value).replace(/[&<>"']/g,ch=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[ch]))}
+
+function showPage(page){
+  document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
+  const target=$(page+"Page");if(target)target.classList.add("active");
+  document.querySelectorAll(".nav-btn").forEach(btn=>btn.classList.toggle("active",btn.dataset.page===page));
+  setTimeout(()=>{
+    if(page==="home"&&map)map.invalidateSize();
+    if(page==="featureWorkspace"&&featureMap)featureMap.invalidateSize();
+    if(page==="analytics"){if(analyticsChart)analyticsChart.resize()}
+    if(page==="settings")refreshSettingsSummary();
+    if(page==="profile")loadProfileForm();
+  },150);
+}
+
+/* DARK MAP */
+function farmIcon(){
+  return L.divIcon({
+    className:"",
+    html:'<div style="width:23px;height:23px;background:#a2f36a;border:4px solid #173c32;border-radius:50%;box-shadow:0 0 0 5px #a2f36a55,0 0 18px #a2f36a"></div>',
+    iconSize:[23,23],iconAnchor:[11,11],popupAnchor:[0,-12]
+  });
+}
+function addDarkTiles(target) {
+    L.tileLayer(
+        'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+        {
+            attribution: '&copy; OpenStreetMap contributors',
+            maxZoom: 19
+        }
+    ).addTo(target);
+}
+function initMap(){
+  if(map)return;
+  map=L.map("map").setView([currentLat,currentLon],13);
+  addDarkTiles(map);
+  farmMarker=L.marker([currentLat,currentLon],{icon:farmIcon()}).addTo(map).bindPopup("Selected farm location");
+  map.on("click",e=>{currentLat=e.latlng.lat;currentLon=e.latlng.lng;updateMapMarker()});
+}
+function updateMapMarker(){
+  const coords=currentLat.toFixed(5)+", "+currentLon.toFixed(5);
+  updateText("coordDisplay",coords);updateText("farmCoordinates",coords);
+  if(map&&farmMarker)farmMarker.setLatLng([currentLat,currentLon]);
+  if(featureMap&&featureMarker){featureMarker.setLatLng([currentLat,currentLon]);featureMap.setView([currentLat,currentLon],13);updateText("featureCoordinates",coords)}
+}
+function loadSampleFarm(){
+  currentLat=23.1815;currentLon=79.9864;updateMapMarker();
+  if(map)map.setView([currentLat,currentLon],13);
+}
+function initFeatureMap(){
+  setTimeout(()=>{
+    if(!$("featureMap"))return;
+    if(!featureMap){
+      featureMap=L.map("featureMap").setView([currentLat,currentLon],13);
+      addDarkTiles(featureMap);
+      featureMarker=L.marker([currentLat,currentLon],{icon:farmIcon()}).addTo(featureMap).bindPopup("Selected farm location");
+      featureMap.on("click",e=>{currentLat=e.latlng.lat;currentLon=e.latlng.lng;updateMapMarker()});
+    }else{
+      featureMap.invalidateSize();featureMap.setView([currentLat,currentLon],13);
+      featureMarker.setLatLng([currentLat,currentLon]);
+    }
+    featureMap.invalidateSize();
+  },200);
+}
+function analyzeFromFeatureMap(){
+  showAlert("🗺️","Farm Location Updated","Your selected coordinates have been updated. You can run the farm analysis from the Home dashboard.",false);
+}
+
+/* FARM ANALYSIS */
+async function analyzeFarm(){
+  const area=parseFloat($("areaInput").value),crop=$("cropSelect").value,status=$("analysisStatus");
+  if(!area||area<=0){status.textContent="Please enter a valid field area.";return}
+  status.textContent="Analysing your farm...";
+  updateText("verdictHeadline","Analysing...");
+  updateText("verdictSubtext","Please wait while your farm conditions are being evaluated.");
+  $("verdictBanner").className="verdict-panel pending";
+  try{
+    let url=`${API_BASE}/api/analyze?lat=${currentLat}&lon=${currentLon}&area_ha=${area}&crop=${encodeURIComponent(crop)}`;
+    if(extractedN!==null)url+=`&soil_n=${encodeURIComponent(extractedN)}`;
+    if(extractedP!==null)url+=`&soil_p=${encodeURIComponent(extractedP)}`;
+    const response=await fetch(url);
+    if(!response.ok)throw new Error("Analysis request failed: "+response.status);
+    const data=await response.json();
+    if(!data||!data.runoff)throw new Error("The analysis response did not contain runoff information.");
+    latestData=data;renderDashboard(data);status.textContent="Farm analysis updated successfully.";
+  }catch(error){
+    console.error(error);status.textContent="Could not connect to the analysis service. Check that the backend is running.";
+    updateText("verdictHeadline","Analysis Unavailable");
+    updateText("verdictSubtext","Please check your connection and try again.");
+    $("verdictBanner").className="verdict-panel pending";
+    showAlert("⚠️","Analysis Could Not Be Completed","The farm analysis service could not be reached. Please check that your backend is running and try again.",true);
+  }
+}
+function renderDashboard(data){
+  const runoff=data.runoff||{},dose=data.dose||{};
+  const verdict=String(runoff.verdict||"Pending").toUpperCase();
+  const isHold=verdict.includes("HOLD"),isSafe=verdict.includes("SAFE");
+  updateText("metricRunoff",verdict);
+  updateText("metricNitrogen",formatValue(runoff.nitrogen_saved_kg," kg"));
+  updateText("metricRupees",runoff.rupees_saved==null?"--":"₹"+runoff.rupees_saved);
+  updateText("metricRisk",formatValue(runoff.washoff_risk_pct,"%"));
+  updateText("metricSaturation",formatValue(runoff.saturation_pct,"%"));
+  updateText("metricCN",formatValue(runoff.curve_number));
+  updateText("overviewArea",formatValue($("areaInput").value," ha"));
+  updateText("verdictHeadline",verdict);
+  updateText("verdictSubtext",runoff.recommendation||runoff.message||"Review your field conditions before applying fertilizer.");
+  updateText("safeWindow",runoff.safe_window||"Not available");
+  $("verdictBanner").className="verdict-panel "+(isHold?"hold":isSafe?"":"pending");
+  updateText("soilDisplay","Soil type: "+(runoff.soil_type||"Not available"));
+  updateText("doseHeadline","Recommended quantities for your selected crop and field area.");
+  updateText("doseSavingsNote",dose.urea_reduced_vs_habit_kg!=null?"Estimated urea reduction compared with usual application: "+dose.urea_reduced_vs_habit_kg+" kg":"");
+  updateText("ureaValue",formatValue(dose.urea_kg));updateText("dapValue",formatValue(dose.dap_kg));
+  updateText("analyticsNitrogen",formatValue(runoff.nitrogen_saved_kg," kg"));
+  updateText("analyticsRupees",runoff.rupees_saved==null?"--":"₹"+runoff.rupees_saved);
+  updateText("analyticsSaturation",formatValue(runoff.saturation_pct,"%"));
+  updateText("analyticsRisk",formatValue(runoff.washoff_risk_pct,"%"));
+  updateText("analyticsCN",formatValue(runoff.curve_number));
+  updateText("analyticsSoil",runoff.soil_type||"--");
+  updateText("analyticsRain",formatValue(runoff.next_36h_rain_mm," mm"));
+  renderCalendar(runoff.calendar_7d||[]);renderCharts(runoff.calendar_7d||[]);
+  showFarmAlert(verdict,runoff);
+}
+
+/* CALENDAR AND CHARTS */
+function renderCalendar(days){
+  const grid=$("calendarGrid");grid.innerHTML="";
+  if(!Array.isArray(days)||!days.length){grid.innerHTML='<p class="muted">No calendar data returned yet.</p>';return}
+  days.slice(0,7).forEach((item,index)=>{
+    const day=document.createElement("div");day.className="day";
+    const title=document.createElement("strong");title.textContent=item.day||item.date||("Day "+(index+1));
+    const value=document.createElement("span");value.textContent=item.recommendation||item.status||item.activity||"No activity";
+    day.append(title,value);grid.append(day);
+  });
+}
+function renderCharts(days){
+  const labels=[],values=[];
+  const hasRain=Array.isArray(days)&&days.length>0&&days.some(d=>d.rain_mm!==undefined&&d.rain_mm!==null);
+  if(hasRain){
+    days.slice(0,7).forEach((d,i)=>{labels.push(d.day||d.date||("Day "+(i+1)));values.push(d.rain_mm==null?null:Number(d.rain_mm))});
+    updateText("chartNote","Rainfall values from the returned 7-day calendar.");
+  }else{labels.push("No calendar data");values.push(null);updateText("chartNote","No rainfall values were returned. The chart is waiting for data.")}
+  const options={responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{
+    y:{beginAtZero:true,title:{display:true,text:"Rainfall (mm)"},grid:{color:"#dce8d8"},ticks:{color:"#536c5b"}},
+    x:{grid:{display:false},ticks:{color:"#536c5b"}}
+  }};
+  if(rainChart)rainChart.destroy();
+  rainChart=new Chart($("rainChart"),{type:"bar",data:{labels,datasets:[{label:"Rainfall (mm)",data:values,backgroundColor:["#287f83","#397d50","#a2d765","#d9a83f","#d96d5f","#65a8a0","#86bc55"],borderRadius:9,maxBarThickness:45}]},options});
+  if(analyticsChart)analyticsChart.destroy();
+  analyticsChart=new Chart($("analyticsChart"),{type:"bar",data:{labels,datasets:[{label:"Rainfall (mm)",data:values,backgroundColor:"#86bc55",borderRadius:9,maxBarThickness:45}]},options});
+}
+
+/* FARM ALERTS */
+function showFarmAlert(verdict,runoff){
+  const risk=Number(runoff.washoff_risk_pct);
+  if(verdict.includes("HOLD")){
+    showAlert("⚠️","Fertilizer Application on Hold","Current conditions are not suitable for fertilizer application according to the latest analysis. Please wait for a safer application window and follow the farm recommendation.",true);return;
+  }
+  if(Number.isFinite(risk)&&risk>=50){
+    showAlert("🌧️","High Wash-off Risk","The estimated wash-off risk is "+risk+"%. Applying fertilizer may lead to nutrient loss. Avoid application until conditions improve and check the recommended safe window.",true);return;
+  }
+  if(verdict.includes("SAFE"))showAlert("🌱","Your Farm Is Ready","The latest analysis indicates that fertilizer application is suitable. Follow the recommended fertilizer dose and application window.",false);
+}
+function showAlert(icon,title,message,hold){
+  const overlay=$("alertPopup"),box=$("alertBox");
+  if(alertTimer)clearTimeout(alertTimer);
+  updateText("alertIcon",icon);updateText("alertTitle",title);updateText("alertMessage",message);
+  box.classList.toggle("hold",hold);box.classList.toggle("safe",!hold);
+  overlay.classList.remove("hidden");
+}
+function closeAlert(){$("alertPopup").classList.add("hidden")}
+document.addEventListener("keydown",e=>{if(e.key==="Escape")closeAlert()});
+
+/* SOIL CARD UPLOAD */
+async function uploadSoilCard(){
+  const fileInput=$("soilCardFile"),status=$("ocrStatus");
+  if(!fileInput.files.length){status.textContent="Please select a Soil Health Card first.";return}
+  const formData=new FormData();
+  formData.append("file",fileInput.files[0]);formData.append("crop",$("cropSelect").value);
+  formData.append("area_ha",$("areaInput").value);
+  status.textContent="Uploading and extracting nutrients...";
+  try{
+    const response=await fetch(`${API_BASE}/api/scan-soil-card`,{method:"POST",body:formData});
+    if(!response.ok)throw new Error("Upload failed: "+response.status);
+    const data=await response.json();
+    if(data.extracted_nutrients){extractedN=data.extracted_nutrients.soil_n??null;extractedP=data.extracted_nutrients.soil_p??null}
+    status.textContent="Soil card processed. Nutrients extracted where available.";
+    if(extractedN!==null||extractedP!==null)analyzeFarm();
+  }catch(error){console.error(error);status.textContent="Soil card upload failed. Check the backend and try again."}
+}
+
+/* PROFILE STORAGE */
+function readProfile(){
+  try{return JSON.parse(localStorage.getItem(PROFILE_KEY)||"{}")}catch{return {}}
+}
+function readSettings(){
+  try{return JSON.parse(localStorage.getItem(SETTINGS_KEY)||"{}")}catch{return {}}
+}
+function readFarmPrefs(){
+  try{return JSON.parse(localStorage.getItem(PREF_KEY)||"{}")}catch{return {}}
+}
+function makeFarmerId(){
+  let id=localStorage.getItem("krishishield_local_farmer_id");
+  if(!id){
+    id="KS-"+Math.random().toString(36).slice(2,8).toUpperCase();
+    localStorage.setItem("krishishield_local_farmer_id",id);
+  }
+  return id;
+}
+function initials(name){
+  const parts=String(name||"Farmer").trim().split(/\s+/).filter(Boolean);
+  if(!parts.length)return "F";
+  return parts.length===1?parts[0].slice(0,2).toUpperCase():(parts[0][0]+parts[parts.length-1][0]).toUpperCase();
+}
+function loadProfileForm(){
+  const p=readProfile();
+  $("farmerName").value=p.name||"";
+  $("farmerPhone").value=p.phone||"";
+  $("farmerVillage").value=p.village||"";
+  $("farmerDistrict").value=p.district||"";
+  updateProfileDisplay();
+}
+function saveProfile(){
+  const profile={
+    name:$("farmerName").value.trim(),
+    phone:$("farmerPhone").value.trim(),
+    village:$("farmerVillage").value.trim(),
+    district:$("farmerDistrict").value.trim()
+  };
+  if(!profile.name){updateText("profileStatus","Please enter your name before saving.");return}
+  localStorage.setItem(PROFILE_KEY,JSON.stringify(profile));
+  updateProfileDisplay();refreshSettingsSummary();
+  updateText("profileStatus","Profile saved on this device.");
+}
+function updateProfileDisplay(){
+  const p=readProfile(),name=p.name||"Farmer";
+  const id=makeFarmerId();
+  updateText("profileDisplayName",name);
+  updateText("profileDisplayPhone",p.phone||"Add your phone number to complete your profile.");
+  updateText("profileAvatar",initials(name));
+  updateText("topAvatar",initials(name));
+  updateText("profileFarmerId","Farmer ID: "+id);
+}
+function refreshSettingsSummary(){
+  const p=readProfile();
+  updateText("settingsFarmerName",p.name||"Not added");
+  updateText("settingsFarmerId",makeFarmerId());
+  updateText("settingsPhone",p.phone||"Not added");
+}
+
+/* FARM PREFERENCES */
+function setMode(mode){
+  currentMode=mode;
+  $("btnFarmerMode").classList.toggle("selected",mode==="farmer");
+  $("btnCoopMode").classList.toggle("selected",mode==="coop");
+  localStorage.setItem("krishishield_mode",mode);
+}
+function saveFarmPreferences(){
+  const prefs={crop:$("profileDefaultCrop").value,area:$("profileDefaultArea").value,mode:currentMode};
+  localStorage.setItem(PREF_KEY,JSON.stringify(prefs));
+  $("cropSelect").value=prefs.crop;$("areaInput").value=prefs.area;
+  updateText("farmPreferenceStatus","Farming preferences saved on this device.");
+}
+function loadFarmPreferences(){
+  const p=readFarmPrefs();
+  if(p.crop){$("profileDefaultCrop").value=p.crop;$("cropSelect").value=p.crop}
+  if(p.area){$("profileDefaultArea").value=p.area;$("areaInput").value=p.area}
+  const mode=localStorage.getItem("krishishield_mode")||p.mode||"farmer";
+  setMode(mode);
+}
+
+/* LANGUAGE PREFERENCE */
+function toggleLanguage(){
+  const selected=$("langSelect").value;
+  if($("profileLanguage"))$("profileLanguage").value=selected;
+  if($("settingsLanguage"))$("settingsLanguage").value=selected;
+  const s=readSettings();s.language=selected;localStorage.setItem(SETTINGS_KEY,JSON.stringify(s));
+}
+function changeLanguageFromProfile(){
+  setAppLanguage($("profileLanguage").value);
+}
+function setAppLanguage(value){
+  $("langSelect").value=value;
+  $("profileLanguage").value=value;
+  $("settingsLanguage").value=value;
+  const s=readSettings();s.language=value;localStorage.setItem(SETTINGS_KEY,JSON.stringify(s));
+}
+
+/* SETTINGS */
+function saveSettings(){
+  const s={
+    language:$("settingsLanguage").value,
+    notifyAnalysis:$("notifyAnalysis").checked,
+    notifyRisk:$("notifyRisk").checked,
+    notifyCalendar:$("notifyCalendar").checked
+  };
+  localStorage.setItem(SETTINGS_KEY,JSON.stringify(s));
+  updateText("settingsSaveStatus","Your notification preferences have been saved on this device.");
+}
+function saveSettingsFarm(){
+  const area=parseFloat($("settingsArea").value);
+  if(!area||area<=0){showAlert("⚠️","Invalid Field Area","Please enter a valid field area greater than zero.",true);return}
+  const crop=$("settingsCrop").value;
+  $("cropSelect").value=crop;$("areaInput").value=area;
+  $("profileDefaultCrop").value=crop;$("profileDefaultArea").value=area;
+  localStorage.setItem(PREF_KEY,JSON.stringify({crop,area,mode:currentMode}));
+  showAlert("🌾","Farm Setup Saved","Your default crop and field area have been saved on this device.",false);
+}
+function loadSettings(){
+  const s=readSettings();
+  $("settingsLanguage").value=s.language||"en";
+  $("langSelect").value=s.language||"en";
+  $("profileLanguage").value=s.language||"en";
+  $("notifyAnalysis").checked=!!s.notifyAnalysis;
+  $("notifyRisk").checked=s.notifyRisk!==false;
+  $("notifyCalendar").checked=!!s.notifyCalendar;
+  const p=readFarmPrefs();
+  $("settingsCrop").value=p.crop||"wheat";
+  $("settingsArea").value=p.area||"1";
+  refreshSettingsSummary();
+}
+function clearLocalProfile(){
+  const ok=confirm("Clear your locally saved profile details from this browser? This will not delete any server account.");
+  if(!ok)return;
+  localStorage.removeItem(PROFILE_KEY);
+  loadProfileForm();refreshSettingsSummary();
+  showAlert("🧹","Local Profile Cleared","Your locally stored profile details have been cleared from this browser. Your local farmer ID remains unchanged.",false);
+}
+
+/* SMS ALERT */
+async function sendKeypadAlert(){
+  const name=$("farmerName").value.trim(),phone=$("farmerPhone").value.trim(),resultBox=$("alertResultBox");
+  if(!phone){resultBox.textContent="Please enter the farmer's phone number in Profile.";return}
+  if(!latestData||!latestData.runoff){resultBox.textContent="Please analyse your farm before sending an alert.";return}
+  const runoff=latestData.runoff,dose=latestData.dose||{};
+  const payload={
+    phone_number:phone,farmer_name:name,verdict:runoff.verdict||"Pending",
+    safe_window:runoff.safe_window||"",
+    dose_text:`Urea: ${dose.urea_kg??"N/A"} kg, DAP: ${dose.dap_kg??"N/A"} kg`,
+    lang:$("langSelect").value
+  };
+  resultBox.textContent="Sending alert...";
+  try{
+    const response=await fetch(`${API_BASE}/api/send-keypad-alert`,{
+      method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(payload)
     });
+    if(!response.ok)throw new Error("Alert request failed: "+response.status);
+    const data=await response.json();
+    resultBox.textContent=data.status||"Alert request processed.";
+    if(data.script)resultBox.textContent+=" | "+data.script;
+  }catch(error){console.error(error);resultBox.textContent="Could not send alert. Check the alert service."}
+}
 
-    function loadSampleFarm() {
-      currentLat = 23.1815;
-      currentLon = 79.9864;
-      map.setView([currentLat, currentLon], 14);
-      marker.setLatLng([currentLat, currentLon]);
-      document.getElementById('coordDisplay').innerText = `${currentLat}, ${currentLon}`;
-      analyzeFarm();
-    }
+/* FEATURE WORKSPACES */
+function openFeature(feature){
+  const workspace=$("workspaceContent");
+  const content={
+    soil:`<h2>🧪 Soil Health Analysis</h2><p>Upload a Soil Health Card to extract available nutrient information and use it in your farm analysis.</p><div class="field"><label for="featureSoilFile">Choose Soil Health Card</label><input type="file" id="featureSoilFile" accept=".pdf,.png,.jpg,.jpeg"></div><button class="primary-btn" onclick="uploadFeatureSoil()">Upload Soil Card</button><p id="featureSoilStatus" class="status-message"></p>`,
+    fertilizer:`<h2>🌾 Fertilizer Optimizer</h2><p>Your latest fertilizer recommendation from the farm analysis.</p><div class="dose-values"><div class="dose-value"><strong>${escapeHTML(formatValue(latestData?.dose?.urea_kg))}</strong><span>Urea (kg)</span></div><div class="dose-value"><strong>${escapeHTML(formatValue(latestData?.dose?.dap_kg))}</strong><span>DAP (kg)</span></div></div><p class="muted" style="margin-top:15px">These quantities update when a new farm analysis is completed.</p>`,
+    water:`<h2>💧 Water & Runoff Analysis</h2><p>Review the latest runoff verdict, saturation and wash-off risk returned by your analysis.</p><div class="three-grid" style="margin-top:18px"><div class="mini-stat"><span>VERDICT</span><strong>${escapeHTML(latestData?.runoff?.verdict??"--")}</strong></div><div class="mini-stat"><span>SATURATION</span><strong>${escapeHTML(formatValue(latestData?.runoff?.saturation_pct,"%"))}</strong></div><div class="mini-stat"><span>WASH-OFF RISK</span><strong>${escapeHTML(formatValue(latestData?.runoff?.washoff_risk_pct,"%"))}</strong></div></div>`,
+    planning:`<h2>📅 Smart Application Planning</h2><p>Review the seven-day application calendar generated by your latest analysis.</p><div class="calendar" id="featureCalendar" style="margin-top:18px"></div>`,
+    assistance:`<h2>📱 Farmer Assistance</h2><p>Send the latest field recommendation through the keypad-phone alert service.</p><div class="field"><label for="featureFarmerName">Farmer Name</label><input id="featureFarmerName" placeholder="Farmer name" value="${escapeHTML(readProfile().name||"")}"></div><div class="field"><label for="featureFarmerPhone">Phone Number</label><input id="featureFarmerPhone" placeholder="Phone number" value="${escapeHTML(readProfile().phone||"")}"></div><button class="primary-btn" onclick="sendFeatureAlert()">Send Alert</button><p id="featureAlertStatus" class="status-message"></p>`,
+    mapfeature:`<h2>🗺️ Farm Location Intelligence</h2><p>Select your farm location on this large dark interactive map. Your selected coordinates will be used for your farm analysis.</p><div id="featureMap" style="height:520px;width:100%;border-radius:17px;margin-top:18px"></div><div class="map-legend"><span><i class="legend-dot"></i> Selected farm</span><span>Click map to move marker</span></div><div class="mini-stat" style="margin-top:15px"><span>SELECTED FARM COORDINATES</span><strong id="featureCoordinates">${currentLat.toFixed(5)}, ${currentLon.toFixed(5)}</strong><span>Click the map to update your farm location.</span></div><p class="muted" style="margin-top:13px">Your selected location is held in this page's current session. Run the analysis from Home.</p>`
+  };
+  workspace.innerHTML=content[feature]||"<h2>Feature</h2>";
+  showPage("featureWorkspace");
+  if(feature==="planning")renderFeatureCalendar();
+  if(feature==="mapfeature")initFeatureMap();
+}
+function closeFeature(){showPage("features")}
+function renderFeatureCalendar(){
+  const target=$("featureCalendar");if(!target)return;
+  const days=latestData?.runoff?.calendar_7d||[];
+  if(!days.length){target.innerHTML='<p class="muted">No calendar data available. Run a farm analysis first.</p>';return}
+  target.innerHTML="";
+  days.slice(0,7).forEach((item,index)=>{
+    const day=document.createElement("div");day.className="day";
+    const title=document.createElement("strong");title.textContent=item.day||item.date||("Day "+(index+1));
+    const value=document.createElement("span");value.textContent=item.recommendation||item.status||item.activity||"No activity";
+    day.append(title,value);target.append(day);
+  });
+}
+async function uploadFeatureSoil(){
+  const input=$("featureSoilFile"),status=$("featureSoilStatus");
+  if(!input.files.length){status.textContent="Please choose a file first.";return}
+  const formData=new FormData();
+  formData.append("file",input.files[0]);formData.append("crop",$("cropSelect").value);
+  formData.append("area_ha",$("areaInput").value);
+  status.textContent="Processing soil card...";
+  try{
+    const response=await fetch(`${API_BASE}/api/scan-soil-card`,{method:"POST",body:formData});
+    if(!response.ok)throw new Error("Upload failed");
+    const data=await response.json();
+    extractedN=data.extracted_nutrients?.soil_n??null;
+    extractedP=data.extracted_nutrients?.soil_p??null;
+    status.textContent="Soil card processed. Nutrient information updated where available.";
+    if(extractedN!==null||extractedP!==null)status.textContent+=" Run a new analysis from Home to use these values.";
+  }catch(error){console.error(error);status.textContent="Upload failed. Check that the backend is running."}
+}
+async function sendFeatureAlert(){
+  const name=$("featureFarmerName").value.trim(),phone=$("featureFarmerPhone").value.trim();
+  $("farmerName").value=name;$("farmerPhone").value=phone;
+  const p=readProfile();p.name=name;p.phone=phone;localStorage.setItem(PROFILE_KEY,JSON.stringify(p));
+  updateProfileDisplay();refreshSettingsSummary();
+  await sendKeypadAlert();
+  updateText("featureAlertStatus",$("alertResultBox").textContent);
+}
 
-    function setMode(mode) {
-      const isFarmer = mode === 'farmer';
-      document.getElementById('farmerViewPanel').classList.toggle('hidden', !isFarmer);
-      document.getElementById('coopViewPanel').classList.toggle('hidden', isFarmer);
-
-      document.getElementById('btnFarmerMode').className = isFarmer
-        ? "px-3 py-1.5 rounded-md bg-emerald-500 text-white transition"
-        : "px-3 py-1.5 rounded-md text-emerald-200 hover:text-white transition";
-      document.getElementById('btnCoopMode').className = !isFarmer
-        ? "px-3 py-1.5 rounded-md bg-amber-500 text-white transition"
-        : "px-3 py-1.5 rounded-md text-emerald-200 hover:text-white transition";
-    }
-
-    async function uploadSoilCard() {
-      const fileInput = document.getElementById('soilCardFile');
-      if (!fileInput.files.length) return;
-      const formData = new FormData();
-      formData.append("file", fileInput.files[0]);
-      formData.append("crop", document.getElementById('cropSelect').value);
-      formData.append("area_ha", document.getElementById('areaInput').value);
-
-      const res = await fetch(`${API_BASE}/api/scan-soil-card`, { method: "POST", body: formData });
-      const data = await res.json();
-      extractedN = data.extracted_nutrients.soil_n;
-      extractedP = data.extracted_nutrients.soil_p;
-      document.getElementById('ocrStatus').classList.remove('hidden');
-      document.getElementById('ocrStatus').innerText = `✅ Extracted N: ${extractedN} kg/ha, P: ${extractedP} kg/ha`;
-      analyzeFarm();
-    }
-
-    async function analyzeFarm() {
-      const crop = document.getElementById('cropSelect').value;
-      const area = document.getElementById('areaInput').value;
-      let url = `${API_BASE}/api/analyze?lat=${currentLat}&lon=${currentLon}&area_ha=${area}&crop=${crop}`;
-      if (extractedN) url += `&soil_n=${extractedN}&soil_p=${extractedP}`;
-
-      try {
-        const res = await fetch(url);
-        latestData = await res.json();
-        renderDashboard(latestData);
-      } catch (err) {
-        alert("Make sure your FastAPI backend is running on http://127.0.0.1:8000 !");
-      }
-    }
-
-    function renderDashboard(data) {
-      const { runoff, dose } = data;
-      const isHold = runoff.verdict === "HOLD";
-
-      document.getElementById('soilDisplay').innerText = runoff.soil_type;
-
-      // Update Banner
-      const banner = document.getElementById('verdictBanner');
-      banner.className = `rounded-2xl p-6 text-white shadow-md transition-colors duration-300 ${isHold ? 'bg-rose-600' : 'bg-emerald-600'}`;
-      document.getElementById('verdictBadge').innerText = isHold ? "⚠️ HIGH RUNOFF RISK — HOLD SPRAYING" : "✅ OPTIMAL SOIL & WEATHER — SAFE TO SPRAY";
-      document.getElementById('verdictHeadline').innerText = isHold
-        ? `DO NOT SPRAY TODAY — Wait until ${runoff.safe_window}`
-        : `SAFE TO APPLY FERTILIZER TODAY`;
-      document.getElementById('verdictSubtext').innerText = isHold
-        ? `Forecasted ${runoff.next_36h_rain_mm}mm rain on ${runoff.saturation_pct}% saturated soil will wash away ~${runoff.washoff_risk_pct}% of applied fertilizer.`
-        : `Low storm runoff risk (${runoff.next_36h_rain_mm}mm rain expected). Soil moisture (${runoff.saturation_pct}%) is ideal for root absorption.`;
-
-      // Update Dose Card
-      document.getElementById('doseHeadline').innerText = `${dose.urea_kg} kg Urea + ${dose.dap_kg} kg DAP`;
-      document.getElementById('doseSavingsNote').innerText = `${dose.urea_reduced_vs_habit_kg} kg less Urea than standard habit`;
-
-      // Update 7-Day Calendar
-      const calGrid = document.getElementById('calendarGrid');
-      calGrid.innerHTML = "";
-      runoff.calendar_7d.forEach(day => {
-        const colorMap = {
-          "GREEN": "bg-emerald-50 border-emerald-300 text-emerald-900",
-          "YELLOW": "bg-amber-50 border-amber-300 text-amber-900",
-          "RED": "bg-rose-50 border-rose-300 text-rose-900"
-        };
-        const iconMap = { "GREEN": "🟢 Safe", "YELLOW": "🟡 Risky", "RED": "🔴 Hold" };
-        calGrid.innerHTML += `
-          <div class="p-3 rounded-xl border ${colorMap[day.status]} text-center">
-            <p class="text-xs font-bold">${day.date.slice(5)}</p>
-            <p class="text-sm font-extrabold my-1">${iconMap[day.status]}</p>
-            <p class="text-xs opacity-80">${day.rain_mm} mm rain</p>
-          </div>
-        `;
-      });
-
-      // Update Bottom Metrics
-      document.getElementById('metricNitrogen').innerText = `${runoff.nitrogen_saved_kg} kg N`;
-      document.getElementById('metricRupees').innerText = `₹${runoff.rupees_saved}`;
-      document.getElementById('metricSaturation').innerText = `${runoff.saturation_pct}% Wet`;
-      document.getElementById('metricCN').innerText = `SCS Curve Number: ${runoff.curve_number}`;
-    }
-
-    async function sendKeypadAlert() {
-      if (!latestData) return;
-      const payload = {
-        phone_number: document.getElementById('farmerPhoneInput').value,
-        farmer_name: document.getElementById('farmerNameInput').value,
-        verdict: latestData.runoff.verdict,
-        safe_window: latestData.runoff.safe_window,
-        dose_text: `${latestData.dose.urea_kg} kg Urea + ${latestData.dose.dap_kg} kg DAP`,
-        lang: document.getElementById('langSelect').value
-      };
-
-      const res = await fetch(`${API_BASE}/api/send-keypad-alert`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload)
-      });
-      const result = await res.json();
-      const box = document.getElementById('alertResultBox');
-      box.classList.remove('hidden');
-      box.innerHTML = `<strong>✅ Voice Call & SMS Dispatched (${result.status}) to ${result.to}:</strong><br/><em>"${result.script}"</em>`;
-    }
-
-    function logSavings() {
-      const btn = document.getElementById('logBtn');
-      btn.innerText = "🎉 Saved to Seasonal Ledger!";
-      btn.classList.replace("bg-emerald-600", "bg-slate-800");
-    }
-
-    function toggleLanguage() {
-      // Triggers Hindi voice script on next alert & updates key labels
-      const isHi = document.getElementById('langSelect').value === 'hi';
-      document.querySelector('[data-i18n="step1Title"]').innerText = isHi ? "1. अपने खेत का स्थान चुनें" : "1. Pin Your Farm Location";
-      document.querySelector('[data-i18n="step2Title"]').innerText = isHi ? "2. फसल और मृदा स्वास्थ्य कार्ड" : "2. Crop & Soil Health Card";
-    }
-
-    // Load initial data on page open
-    analyzeFarm();
-  </script>
+/* INITIALIZATION */
+window.addEventListener("load",()=>{
+  initMap();updateMapMarker();
+  loadProfileForm();loadSettings();loadFarmPreferences();
+  refreshSettingsSummary();
+  analyzeFarm();
+});
+</script>
 </body>
 </html>
